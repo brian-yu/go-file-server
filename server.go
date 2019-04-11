@@ -192,7 +192,7 @@ func main(){
 	// Parse the args.
 	flag.Parse()
 	// Say that we are starting the server.
-	fmt.Printf("Server starting, port %v\n", port)
+	fmt.Printf("Server starting, port %v, working dir: '%s'\n", port, workingDir)
 	serverString := fmt.Sprintf(":%v", port)
 
 	// Set up the service handles for certain pattern requests in the url.
