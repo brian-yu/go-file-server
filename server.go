@@ -23,7 +23,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, userlib.FILEERRORMSG, userlib.FILEERRORCODE)
 		return
 	}
-	w.Header().Set("Content-Type", userlib.GetContentType(r.URL.Path))
+	w.Header().Set(userlib.ContextType, userlib.GetContentType(r.URL.Path))
 	/*** YOUR CODE HERE END ***/
 
 	// This will automagically set the right content type for the
@@ -37,7 +37,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 // This function will handle the requests to acquire the cache status.
 func cacheHandler(w http.ResponseWriter, r *http.Request) {
 	// Sets the header of the request to a plain text format since we are just dumping information about the cache.
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set(userlib.ContextType, "text/plain; charset=utf-8")
 	// Set the success code to the proper success code since the action should not fail.
 	w.WriteHeader(userlib.SUCCESSCODE)
 	// Get the cache status string from the getCacheStatus function.
@@ -47,7 +47,7 @@ func cacheHandler(w http.ResponseWriter, r *http.Request) {
 // This function will handle the requests to clear/restart the cache.
 func cacheClearHandler(w http.ResponseWriter, r *http.Request) {
 	// Sets the header of the request to a plain text format since we are just dumping information about the cache.
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set(userlib.ContextType, "text/plain; charset=utf-8")
 	// Set the success code to the proper success code since the action should not fail.
 	w.WriteHeader(userlib.SUCCESSCODE)
 	// Get the cache status string from the getCacheStatus function.
