@@ -93,7 +93,7 @@ func getFile(filename string) (response *fileResponse) {
 	// more) should be replaced by a single "/".
 	// Hint: A replacement may lead to needing to do more replacements!
 
-	// Also if you get a request which is just "/", you should return "./index.html"
+	// Also if you get a request which is just "/", you should return the file "./index.html"
 
 	// You should also return a file not found error if after `timeout`
 	// seconds if there is no response from the cache, so you will
