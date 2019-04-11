@@ -1,8 +1,8 @@
-package main
+package fileserver
 
 import (
 	"bytes"
-	"github.com/61c-teach/sp19-proj5-alternate-dev/Staff_Solution/userlib"
+	"github.com/61c-teach/sp19-proj5-userlib"
 	"net/http"
 	"net/url"
 	"testing"

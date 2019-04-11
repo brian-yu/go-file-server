@@ -1,16 +1,14 @@
-package skeleton
+package fileserver
 
 import (
 	"flag"
 	"fmt"
-	"github.com/61c-teach/sp19-proj5-alternate-dev/skeleton/userlib"
-	_ "github.com/61c-teach/sp19-proj5-alternate-dev/skeleton/userlib"
+	"github.com/61c-teach/sp19-proj5-userlib"
 	"net/http"
 	"log"
 	_ "strings"
 	_ "time"
 )
-
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	// FIXME This should be using the cache!
@@ -25,12 +23,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// This will automagically set the right content type for the
 	// reply as well.
-	w.WriteHeader(userlib.SUCCESSCODE)
+	w.WriteHeader(userlib.SUCCESSCODE) // Make sure you write the correct header code so that the tests do not fail!
 	w.Write(response)
 }
 
 func cacheHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(userlib.SUCCESSCODE) // Make sure you write the correct header code so that the tests do not fail!
 	w.Write([]byte(getCacheStatus()))
 }
 
