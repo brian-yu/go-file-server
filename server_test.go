@@ -48,7 +48,7 @@ func TestBasicFileTest(t *testing.T) {
 	// I keep a dummy read_name variable which will be set by the custom userlib function I defined below.
 	read_name := ""
 	// This is the data which that fake file will contain.
-	data_to_be_read := []byte("CS61C is the best class in the world! Emperor Nick shall rain supreme.")
+	data_to_be_read := []byte("CS61C is the best class in the world! Emperor Nick shall reign supreme.")
 	// This is bad data which will be read if the filename is not correct.
 	bad_data := []byte("CS61C is the worst class ever!")
 	// We finally make the http request which the handler can understand.
