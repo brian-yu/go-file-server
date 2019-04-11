@@ -93,15 +93,18 @@ func getFile(filename string) (response *fileResponse) {
 	// more) should be replaced by a single "/".
 	// Hint: A replacement may lead to needing to do more replacements!
 
+	// Also if you get a request which is just "/", you should return "./index.html"
+
 	// You should also return a file not found error if after `timeout`
 	// seconds if there is no response from the cache, so you will
 	// need to modify the end of the function as well.
+
 	/*** YOUR CODE HERE ***/
 
 	/*** YOUR CODE HERE END ***/
 
 	// Makes the file request object.
-	request := fileRequest{filename, make(chan(*fileResponse))}
+	request := fileRequest{filename, make(chan *fileResponse)}
 	// Sends a pointer to the file request object to the fileChan so the cache can process the file request.
 	fileChan <- &request
 	// Returns the result (from the fileResponse channel)
@@ -129,8 +132,8 @@ func CacheClear() (response string) {
 
 
 type cacheEntry struct {
-	request string
-	response *fileResponse
+	filename string
+	data []byte
 
 	// You may want to add other stuff here...
 }
