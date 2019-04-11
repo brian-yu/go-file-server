@@ -17,7 +17,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Make sure you properly sanitise it (more described in get file).
 	/*** YOUR CODE HERE ***/
 	// Reads the file from the disk
-	response, err := userlib.ReadFile(r.URL.Path[1:])
+	response, err := userlib.ReadFile(workingDir, r.URL.Path[1:])
 	if err != nil {
 		// If we have an error from the read, will return the generic file error message and set the error code to follow that.
 		http.Error(w, userlib.FILEERRORMSG, userlib.FILEERRORCODE)
@@ -72,12 +72,15 @@ type fileRequest struct {
 	response chan *fileResponse
 }
 
+// DO NOT CHANGE THESE NAMES OR YOU WILL NOT PASS THE TESTS
 // Port of the server to run on
 var port int
 // Capacity of the cache in Bytes
 var capacity int
 // Timeout for file reads in Seconds.
 var timeout int
+// The is the working directory of the server
+var workingDir string
 
 // The channel to pass file read requests to. This is how you will get a file from the cache.
 var fileChan = make(chan *fileRequest )
@@ -184,7 +187,8 @@ func main(){
 	// other parts of the file server.
 	flag.IntVar(&port, "p", 8080, "Port to listen for HTTP requests (default port 8080).")
 	flag.IntVar(&capacity, "c", 100000, "Number of bytes to allow in the cache.")
-	flag.IntVar(&timeout, "t", 2, "Default timeout (in seconds) to wait before returning an error")
+	flag.IntVar(&timeout, "t", 2, "Default timeout (in seconds) to wait before returning an error.")
+	flag.StringVar(&workingDir, "d", "public_html/", "The directory which the files are hosted in.")
 	// Parse the args.
 	flag.Parse()
 	// Say that we are starting the server.

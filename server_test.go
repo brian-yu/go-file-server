@@ -34,6 +34,7 @@ func TestBasicFileTest(t *testing.T) {
 	// We first need to define a capacity and timeout so our cache has some parameters.
 	capacity = 1000
 	timeout = 2
+	workingDir = ""
 	// We then need to launch the cache since we are not directly calling main to do this testing.
 	go operateCache()
 	// We need to set up a response writer which will be the dummy passed into the handler to make testing easier.
@@ -53,7 +54,7 @@ func TestBasicFileTest(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := http.Request{URL:&path}
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.F = func(filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
 		// Set the global read_name variable to what we read for an error check later.
 		read_name = filename
 		// If we get the expected name, we will return the correct data.
@@ -64,7 +65,7 @@ func TestBasicFileTest(t *testing.T) {
 			data = bad_data
 		}
 		return
-	}
+	})
 	// We finally will call the handler. This is where we will get the data from the cache and or filesystem depending
 	// on if it is in the cache. It will be stored in the dummy Response Writer which was created above.
 	handler(&resp, &req)
