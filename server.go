@@ -23,6 +23,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, userlib.FILEERRORMSG, userlib.FILEERRORCODE)
 		return
 	}
+	w.Header().Set("Content-Type", userlib.GetContentType(r.URL.Path))
 	/*** YOUR CODE HERE END ***/
 
 	// This will automagically set the right content type for the
@@ -57,8 +58,10 @@ func cacheClearHandler(w http.ResponseWriter, r *http.Request) {
 // It contains the file contents (if there is any)
 // or the error returned when accessing the file.
 type fileResponse struct {
+	filename string
 	responseData []byte
 	responseError error
+	responseChan chan *fileResponse
 }
 
 // To request files from the cache, we send a message that 
