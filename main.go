@@ -53,7 +53,6 @@ type fileRequest struct {
 
 var port int
 var capacity int
-var capacityString string = "Cache status:  # of entries %v\ntotal bytes occupied by entries %v\nmax allowed capacity %v\n"
 var timeout int
 
 // These names must not change or you will not pass any of the autograder tests!
