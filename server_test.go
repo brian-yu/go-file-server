@@ -43,27 +43,27 @@ func TestBasicFileTest(t *testing.T) {
 	// This is the filename which will be passed into the handler as a url.
 	name := "/cs61c.html"
 	// For this test, we expect the only change to the file name to be adding a dot in front of it since there is nothing else to replace.
-	expected_name := "." + name
+	expectedName := "." + name
 	// Here I take the name and turn it into a URL to use later.
 	path := url.URL{Path:name}
-	// I keep a dummy read_name variable which will be set by the custom userlib function I defined below.
-	read_name := ""
+	// I keep a dummy readName variable which will be set by the custom userlib function I defined below.
+	readName := ""
 	// This is the data which that fake file will contain.
-	data_to_be_read := []byte("CS61C is the best class in the world! Emperor Nick shall reign supreme.")
+	DataToBeRead := []byte("CS61C is the best class in the world! Emperor Nick shall reign supreme.")
 	// This is bad data which will be read if the filename is not correct.
-	bad_data := []byte("CS61C is the worst class ever!")
+	badData := []byte("CS61C is the worst class ever!")
 	// We finally make the http request which the handler can understand.
 	req := http.Request{URL:&path}
 	// We set the userlib FileRead function to this custom 'read'.
 	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
-		// Set the global read_name variable to what we read for an error check later.
-		read_name = filename
+		// Set the global readName variable to what we read for an error check later.
+		readName = filename
 		// If we get the expected name, we will return the correct data.
-		if filename == expected_name {
-			data = data_to_be_read
+		if filename == expectedName {
+			data = DataToBeRead
 		} else {
 			// Otherwise we return the bad data.
-			data = bad_data
+			data = badData
 		}
 		return
 	})
@@ -71,12 +71,12 @@ func TestBasicFileTest(t *testing.T) {
 	// on if it is in the cache. It will be stored in the dummy Response Writer which was created above.
 	handler(&resp, &req)
 	// Finally we validate if we read the correct filename.
-	if expected_name != read_name {
-		t.Errorf("The path (%s) which was passed in was not correct!", read_name)
+	if expectedName != readName {
+		t.Errorf("The path (%s) which was passed in was not correct!", readName)
 	}
 	// We will also assert that we have read the correct bytes just to be certain that everything was saved and forwarded correctly.
-	if !bytes.Equal(data_to_be_read, resp.data) {
-		t.Errorf("The data that was received (%s) was not what was expected (%s)!", string(resp.data), string(data_to_be_read))
+	if !bytes.Equal(DataToBeRead, resp.data) {
+		t.Errorf("The data that was received (%s) was not what was expected (%s)!", string(resp.data), string(DataToBeRead))
 	}
 	// Next we check to see if the header has the correct value for the context type.
 	if resp.header.Get(userlib.ContextType) != userlib.GetContentType(name){
