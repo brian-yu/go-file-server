@@ -154,30 +154,11 @@ type cacheEntry struct {
 // Hint, you are going to want another channel 
 
 func operateCache() {
+	/* TODO Initialize your cache and the service requests until the program exits or you receive a message on the
+	 * cacheCloseChan at which point you should clean up (aka clear any caching global variables and return from
+	 * this function. */
 	/*** YOUR CODE HERE ***/
-	// Init our cache to zero bytes.
-	currentCapacity := 0
-	currentCapacity = currentCapacity // This is just to prevent Golang from yelling at us about unused variables. Removed this once you use the variable elsewhere.
 	// Make a file map (this is just like a hashmap in java) for the cache entries.
-	fileMap := make(map[string] *cacheEntry)
-	fileMap = fileMap // This is just to prevent Golang from yelling at us about unused variables. Removed this once you use the variable elsewhere.
-	for {
-		// We want to select what we want to do based on what is in different cache channels.
-		select {
-		case fileReq := <- fileChan:
-			fileReq = fileReq // This is just to prevent Golang from yelling at us about unused variables. Removed this once you use the variable elsewhere.
-			// Handle a file request here.
-
-		case cacheReq := <- cacheCapacityChan:
-			cacheReq = cacheReq // This is just to prevent Golang from yelling at us about unused variables. Removed this once you use the variable elsewhere.
-			// Handle a cache capacity request here.
-
-		case <- cacheCloseChan:
-			// We want to exit the cache.
-			// Make sure you clean up all of your cache state or you will fail most all of the tests!
-			return
-		}
-	}
 	/*** YOUR CODE HERE END ***/
 }
 
