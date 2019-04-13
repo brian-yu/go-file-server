@@ -17,13 +17,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Make sure you properly sanitise it (more described in get file).
 	/*** YOUR CODE HERE ***/
 	// Reads the file from the disk
-	response, err := userlib.ReadFile(workingDir, r.URL.Path[1:])
+	filename := r.URL.Path[1:]
+	response, err := userlib.ReadFile(workingDir, filename)
 	if err != nil {
 		// If we have an error from the read, will return the generic file error message and set the error code to follow that.
 		http.Error(w, userlib.FILEERRORMSG, userlib.FILEERRORCODE)
 		return
 	}
-	w.Header().Set(userlib.ContextType, userlib.GetContentType(r.URL.Path))
+	w.Header().Set(userlib.ContextType, userlib.GetContentType(filename))
 	/*** YOUR CODE HERE END ***/
 
 	// This will automagically set the right content type for the
@@ -57,6 +58,8 @@ func cacheClearHandler(w http.ResponseWriter, r *http.Request) {
 // The structure used for responding to file requests.
 // It contains the file contents (if there is any)
 // or the error returned when accessing the file.
+// Note that it is only used by you so you do not
+// need to use all of the fields in it.
 type fileResponse struct {
 	filename string
 	responseData []byte
@@ -67,6 +70,8 @@ type fileResponse struct {
 // To request files from the cache, we send a message that 
 // requests the file and provides a channel for the return
 // information.
+// Note that it is only used by you so you do not
+// need to use all of the fields in it.
 type fileRequest struct {
 	filename string
 	response chan *fileResponse
@@ -83,7 +88,7 @@ var timeout int
 var workingDir string
 
 // The channel to pass file read requests to. This is how you will get a file from the cache.
-var fileChan = make(chan *fileRequest )
+var fileChan = make(chan *fileRequest)
 // The channel to pass a request to get back the capacity info of the cache.
 var cacheCapacityChan = make(chan chan string)
 // The channel where a bool passed into it will cause the OperateCache function to be closed and all of the data to be cleared.
@@ -157,6 +162,7 @@ func operateCache() {
 	/* TODO Initialize your cache and the service requests until the program exits or you receive a message on the
 	 * cacheCloseChan at which point you should clean up (aka clear any caching global variables and return from
 	 * this function. */
+ 	// HINT: Take a look at the global channels given above!
 	/*** YOUR CODE HERE ***/
 	// Make a file map (this is just like a hashmap in java) for the cache entries.
 	/*** YOUR CODE HERE END ***/
