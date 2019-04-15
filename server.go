@@ -10,6 +10,7 @@ import (
 	_ "time"
 )
 
+// This is the handler function which will handle every request other than cache specific requests.
 func handler(w http.ResponseWriter, r *http.Request) {
 	// FIXME This should be using the cache!
 	// Note that we will be using userlib.ReadFile we provided to read files on the system.
@@ -36,9 +37,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 // This function will handle the requests to acquire the cache status.
+// You should not need to edit this function.
 func cacheHandler(w http.ResponseWriter, r *http.Request) {
 	// Sets the header of the request to a plain text format since we are just dumping information about the cache.
-	w.Header().Set(userlib.ContextType, "text/plain; charset=utf-8")
+	// Note that we are just putting a fake filename which will get the correct content type.
+	w.Header().Set(userlib.ContextType, userlib.GetContentType("cacheStatus.txt"))
 	// Set the success code to the proper success code since the action should not fail.
 	w.WriteHeader(userlib.SUCCESSCODE)
 	// Get the cache status string from the getCacheStatus function.
@@ -46,9 +49,11 @@ func cacheHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // This function will handle the requests to clear/restart the cache.
+// You should not need to edit this function.
 func cacheClearHandler(w http.ResponseWriter, r *http.Request) {
 	// Sets the header of the request to a plain text format since we are just dumping information about the cache.
-	w.Header().Set(userlib.ContextType, "text/plain; charset=utf-8")
+	// Note that we are just putting a fake filename which will get the correct content type.
+	w.Header().Set(userlib.ContextType, userlib.GetContentType("cacheClear.txt"))
 	// Set the success code to the proper success code since the action should not fail.
 	w.WriteHeader(userlib.SUCCESSCODE)
 	// Get the cache status string from the getCacheStatus function.
@@ -114,6 +119,8 @@ func getFile(filename string) (response *fileResponse) {
 
 	/*** YOUR CODE HERE END ***/
 
+	// The part below will make a request on the fileChan and wait for a response to be issued from the cache.
+	// You should not really need to modify anything below here.
 	// Makes the file request object.
 	request := fileRequest{filename, make(chan *fileResponse)}
 	// Sends a pointer to the file request object to the fileChan so the cache can process the file request.
@@ -122,6 +129,9 @@ func getFile(filename string) (response *fileResponse) {
 	return <- request.response
 }
 
+// This function returns a string of the cache current status.
+// It will just make a request to the cache asking for the status.
+// You should not need to modify this function.
 func getCacheStatus() (response string) {
 	// Make a channel for the response of the Capacity request.
 	responseChan := make(chan string)
@@ -131,6 +141,8 @@ func getCacheStatus() (response string) {
 	return <- responseChan
 }
 
+// This function will tell the cache that it needs to close itself.
+// You should not need to modify this function.
 func CacheClear() (response string) {
 	// Send the response channel to the capacity request channel.
 	cacheCloseChan <- true
@@ -169,6 +181,12 @@ func operateCache() {
 }
 
 
+// This functions when you do `go run server.go`. It will read and parse the command line arguments, set the values
+// of some global variables, print out the server settings, tell the `http` library which functions to call when there
+// is a request made to certain paths, launch the cache, and finally listen for connections and serve the requests
+// which a connection may make. When it services a request, it will call one of the handler functions depending on if
+// the prefix of the path matches the pattern which was set by the HandleFunc.
+// You should not need to modify any of this.
 func main(){
 	// Initialize the arguments when the main function is ran. This is to setup the settings needed by
 	// other parts of the file server.
