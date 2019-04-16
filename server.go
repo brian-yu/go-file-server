@@ -16,7 +16,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Note that we will be using userlib.ReadFile we provided to read files on the system.
 	// The path to the file is given by r.URL.Path and will be the path to the string.
 	// Make sure you properly sanitise it (more described in get file).
-	/*** YOUR CODE HERE ***/
+	/*** MODIFY THIS CODE ***/
 	// Reads the file from the disk
 	filename := r.URL.Path[1:]
 	response, err := userlib.ReadFile(workingDir, filename)
@@ -25,11 +25,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, userlib.FILEERRORMSG, userlib.FILEERRORCODE)
 		return
 	}
-	w.Header().Set(userlib.ContextType, userlib.GetContentType(filename))
-	/*** YOUR CODE HERE END ***/
 
-	// This will automagically set the right content type for the
-	// reply as well.
+	// This will automatically set the right content type for the reply as well.
+	w.Header().Set(userlib.ContextType, userlib.GetContentType(filename))
 	// We need to set the correct header code for a success since we should only succeed at this point.
 	w.WriteHeader(userlib.SUCCESSCODE) // Make sure you write the correct header code so that the tests do not fail!
 	// Write the data which is given to us by the response.
@@ -99,7 +97,7 @@ var cacheCapacityChan = make(chan chan string)
 // The channel where a bool passed into it will cause the OperateCache function to be closed and all of the data to be cleared.
 var cacheCloseChan = make(chan bool)
 
-// A wrapper function that does the actual getting of the file
+// A wrapper function that does the actual getting of the file from the cache.
 func getFile(filename string) (response *fileResponse) {
 	// You need to add sanity checking here: The requested file
 	// should be made relative (strip out leading "/" characters,
@@ -177,6 +175,25 @@ func operateCache() {
  	// HINT: Take a look at the global channels given above!
 	/*** YOUR CODE HERE ***/
 	// Make a file map (this is just like a hashmap in java) for the cache entries.
+
+	// Once you have made a filemap, here is a good skeleton for oyu to use to handle requests.
+	for {
+		// We want to select what we want to do based on what is in different cache channels.
+		select {
+		case fileReq := <- fileChan:
+			fileReq = fileReq // This is just to prevent Golang from yelling at us about unused variables. Removed this once you use the variable elsewhere.
+			// Handle a file request here.
+
+		case cacheReq := <- cacheCapacityChan:
+			cacheReq = cacheReq // This is just to prevent Golang from yelling at us about unused variables. Removed this once you use the variable elsewhere.
+			// Handle a cache capacity request here.
+
+		case <- cacheCloseChan:
+			// We want to exit the cache.
+			// Make sure you clean up all of your cache state or you will fail most all of the tests!
+			return
+		}
+	}
 	/*** YOUR CODE HERE END ***/
 }
 
