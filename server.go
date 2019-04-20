@@ -109,7 +109,7 @@ func getFile(filename string) (response *fileResponse) {
 
 	// Also if you get a request which is just "/", you should return the file "./index.html"
 
-	// You should also return a file not found error if after `timeout`
+	// You should also return a timeout error (take a look at the userlib) after `timeout`
 	// seconds if there is no response from the cache, so you will
 	// need to modify the end of the function as well.
 
