@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	_ "time"
 
 	userlib "github.com/61c-teach/sp19-proj5-userlib"
 )
@@ -21,23 +20,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	/*** MODIFY THIS CODE ***/
 	// Reads the file from the disk
 	filename := r.URL.Path[1:]
-
-	/*
-		response, err := userlib.ReadFile(workingDir, filename)
-		if err != nil {
-			// If we have an error from the read, will return the generic file error message and set the error code to follow that.
-			http.Error(w, userlib.FILEERRORMSG, userlib.FILEERRORCODE)
-			// NOTE: if timeout, pass in userlib.TimeoutString and userlib.TIMEOUTERRORCODE
-			return
-		}
-
-		// This will automatically set the right content type for the reply as well.
-		w.Header().Set(userlib.ContextType, userlib.GetContentType(filename))
-		// We need to set the correct header code for a success since we should only succeed at this point.
-		w.WriteHeader(userlib.SUCCESSCODE) // Make sure you write the correct header code so that the tests do not fail!
-		// Write the data which is given to us by the response.
-		w.Write(response)
-	*/
 
 	response := getFile(filename)
 
@@ -141,8 +123,6 @@ func getFile(filename string) (response *fileResponse) {
 
 	/*** YOUR CODE HERE ***/
 
-	// TODO - add timeout
-
 	// perform sanitization
 	filename = strings.TrimPrefix(filename, "/")
 	if !strings.HasPrefix(filename, "./") {
@@ -160,7 +140,6 @@ func getFile(filename string) (response *fileResponse) {
 		filename += "index.html"
 	}
 
-	// fmt.Printf("Request for: %q\n", filename)
 	/*** YOUR CODE HERE END ***/
 
 	// The part below will make a request on the fileChan and wait for a response to be issued from the cache.
@@ -204,6 +183,30 @@ type cacheEntry struct {
 	// You may want to add other stuff here...
 }
 
+func cacheFile(fileMap map[string]cacheEntry, cacheSize *int, fileRes *fileResponse) {
+	// if file is not in cache, insert it
+	if _, prs := fileMap[fileRes.filename]; !prs {
+
+		// make room if cache is full
+		for filename, entry := range fileMap {
+			if *cacheSize+len(fileRes.responseData) <= capacity {
+				break
+			}
+
+			delete(fileMap, filename)
+			*cacheSize -= len(entry.data)
+		}
+
+		if *cacheSize+len(fileRes.responseData) <= capacity {
+			fileMap[fileRes.filename] = cacheEntry{
+				filename: fileRes.filename,
+				data:     fileRes.responseData,
+			}
+			*cacheSize += len(fileRes.responseData)
+		}
+	}
+}
+
 // This function is where you need to do all the work...
 // Basically, you need to...
 
@@ -213,6 +216,7 @@ type cacheEntry struct {
 
 // Hint, you are going to want another channel
 var serveChan = make(chan *fileResponse)
+var cacheChan = make(chan *fileResponse)
 
 func operateCache() {
 	/* TODO Initialize your cache and the service requests until the program exits or you receive a message on the
@@ -245,7 +249,7 @@ func operateCache() {
 				// TODO - must cache file after timeout
 
 				go func() {
-					// fmt.Printf("Fetching %q\n", fileReq.filename)
+					// fmt.Printf("Loading %q\n", fileReq.filename)
 					ch := make(chan *fileResponse, 1)
 
 					go func() {
@@ -261,6 +265,7 @@ func operateCache() {
 							responseError: err,
 							responseChan:  fileReq.response,
 						}
+						close(ch)
 
 						// fmt.Printf("DISK: Done loading %q\n", fileReq.filename)
 					}()
@@ -281,33 +286,26 @@ func operateCache() {
 							responseChan:  nil,
 						}
 					}
+
+					// cache files after timeout response
+					for res := range ch {
+						if res.responseError != nil {
+							res.responseChan <- res
+							return
+						}
+						cacheChan <- res
+					}
 				}()
 
 			}
 
 		case fileRes := <-serveChan:
-
 			// fmt.Printf("Serving %q\n", fileRes.filename)
 			fileRes.responseChan <- fileRes
+			cacheFile(fileMap, &cacheSize, fileRes)
 
-			// if file is not in cache, insert it
-			if _, prs := fileMap[fileRes.filename]; !prs {
-
-				// make room if cache is full
-				for filename, entry := range fileMap {
-					if cacheSize+len(fileRes.responseData) <= capacity {
-						break
-					}
-
-					delete(fileMap, filename)
-					cacheSize -= len(entry.data)
-				}
-
-				if cacheSize+len(fileRes.responseData) <= capacity {
-					fileMap[fileRes.filename] = cacheEntry{filename: fileRes.filename, data: fileRes.responseData}
-					cacheSize += len(fileRes.responseData)
-				}
-			}
+		case fileRes := <-cacheChan:
+			cacheFile(fileMap, &cacheSize, fileRes)
 
 		case cacheReq := <-cacheCapacityChan:
 			// Handle a cache capacity request here.
