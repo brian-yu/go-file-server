@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/61c-teach/sp19-proj5-userlib"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	userlib "github.com/61c-teach/sp19-proj5-userlib"
 )
 
 /*
@@ -20,8 +21,8 @@ import (
  */
 type ResponseWriterTester struct {
 	http.ResponseWriter
-	header http.Header
-	data []byte
+	header     http.Header
+	data       []byte
 	statusCode int
 }
 
@@ -43,7 +44,7 @@ func genResponseTestWriter() *ResponseWriterTester {
 }
 
 func genRequestUrl(urlpath string) *http.Request {
-	return &http.Request{URL:&url.URL{Path:urlpath}}
+	return &http.Request{URL: &url.URL{Path: urlpath}}
 }
 
 func clearCache() {
@@ -67,7 +68,7 @@ func validateFileResponse(readName, expectedName string, dataToBeRead []byte, re
 		t.Errorf("The data that was received was not what was expected! Expected (%s), Actual (%s)", string(dataToBeRead), string(resp.data))
 	}
 	// Next we check to see if the header has the correct value for the context type.
-	if resp.header.Get(userlib.ContextType) != userlib.GetContentType(expectedName){
+	if resp.header.Get(userlib.ContextType) != userlib.GetContentType(expectedName) {
 		failed = true
 		t.Errorf("Received the wrong context type for the file. Expected: (%s), Actual: (%s)", string(userlib.GetContentType(expectedName)), string(resp.header.Get(userlib.ContextType)))
 	}
@@ -96,14 +97,14 @@ func validateBadFile(badName string, secTimeout int, t *testing.T) (failed bool)
 }
 
 func validateTimeout(resp *ResponseWriterTester, t *testing.T) (failed bool) {
-	if !bytes.Equal(resp.data, []byte(userlib.TimeoutString + "\n")) {
+	if !bytes.Equal(resp.data, []byte(userlib.TimeoutString+"\n")) {
 		failed = true
-		t.Errorf("I did not receive the timeout string! Expected: (%s), Actual: (%s)!", userlib.TimeoutString + "\n", string(resp.data))
+		t.Errorf("I did not receive the timeout string! Expected: (%s), Actual: (%s)!", userlib.TimeoutString+"\n", string(resp.data))
 	}
 	return failed
 }
 
-func validateCacheSize(items, size int,t *testing.T) (failed bool) {
+func validateCacheSize(items, size int, t *testing.T) (failed bool) {
 	resp := genResponseTestWriter()
 	req := genRequestUrl(cacheUrl)
 	cacheHandler(resp, req)
@@ -151,19 +152,21 @@ func requestFile(filename string, secTimeout int, t *testing.T) *ResponseWriterT
 	resp := genResponseTestWriter()
 	req := genRequestUrl(filename)
 	c := make(chan bool)
-	go func (chan bool) {
+	go func(chan bool) {
 		handler(resp, req)
 		c <- true
 	}(c)
 	select {
-	case <- c: // This means we did not time out.
-	case <- time.After(time.Duration(secTimeout + 1) * time.Second):
+	case <-c: // This means we did not time out.
+	case <-time.After(time.Duration(secTimeout+1) * time.Second):
 		t.Errorf("The handler took too long to respond!")
 		t.FailNow()
 	}
 	return resp
 }
+
 var launched = false
+
 //func init() {
 //	go operateCache()
 //}
@@ -199,7 +202,7 @@ func TestSanityFileTest(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(name)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Set the global readName variable to what we read for an error check later.
 		readName = filename
 		// If we get the expected name, we will return the correct data.
@@ -251,7 +254,7 @@ func TestSanityFileCheckSize(t *testing.T) {
 	// We need to count the number of file reads we get.
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		// Set the global read_name variable to what we read for an error check later.
@@ -307,7 +310,7 @@ func TestSanityFileDoubleRead(t *testing.T) {
 	// We need to count the number of file reads we get.
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		// Set the global read_name variable to what we read for an error check later.
@@ -366,7 +369,7 @@ func TestSanityReadCloseRead(t *testing.T) {
 	// We need to count the number of file reads we get.
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		// Set the global read_name variable to what we read for an error check later.
@@ -426,7 +429,7 @@ func TestSanity404(t *testing.T) {
 	// We need to count the number of file reads we get.
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		// If we get the expected name, we will return the correct data.
@@ -469,7 +472,7 @@ func TestSanityFileType(t *testing.T) {
 	fData := []byte("data")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		readName = filename
@@ -478,37 +481,37 @@ func TestSanityFileType(t *testing.T) {
 	})
 	name := "/exam.htm"
 	resp := requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.html"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.jpeg"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.jpg"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.png"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.css"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.js"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.pdf"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.pdx"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.txt"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	name = "/exam.txt"
 	resp = requestFile(name, secTimeout, t)
-	validateFileResponse(readName, "." + name, fData, resp, userlib.SUCCESSCODE, t)
+	validateFileResponse(readName, "."+name, fData, resp, userlib.SUCCESSCODE, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
 		os.Exit(61)
@@ -542,7 +545,7 @@ func TestImplIndexFileTests(t *testing.T) {
 	var reads uint64 = 0
 	readName := ""
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		readName = filename
@@ -561,7 +564,7 @@ func TestImplIndexFileTests(t *testing.T) {
 	name = "/best/class/ever/"
 	expectedName = "./best/class/ever/index.html"
 	resp = requestFile(name, secTimeout, t)
-	validateCacheSize(2, 2 * len(dataToBeRead), t)
+	validateCacheSize(2, 2*len(dataToBeRead), t)
 	validateFileResponse(readName, expectedName, dataToBeRead, resp, userlib.SUCCESSCODE, t)
 	name = "/best/class/ever"
 	expectedName = "./best/class/ever"
@@ -578,6 +581,7 @@ func TestImplIndexFileTests(t *testing.T) {
 	}
 	clearCache()
 }
+
 // ============ End of Implementation Tests ============
 
 // ============ File String Sanitization Tests ============
@@ -596,7 +600,7 @@ func TestSanitizationDoubleSlash(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(name)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -641,7 +645,7 @@ func TestSanitizationVSlashPattern(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(name)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -686,7 +690,7 @@ func TestSanitizationPreviousDirectory(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(name)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -732,7 +736,7 @@ func TestSanitizationSimpleCombinations(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(name)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -783,7 +787,7 @@ func TestSanitizationSimpleSameEndFile(t *testing.T) {
 	req := genRequestUrl(name)
 	shouldReadFile := true
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -840,7 +844,7 @@ func TestSanitizationLongReplace(t *testing.T) {
 	req := genRequestUrl(name)
 	shouldReadFile := true
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -878,7 +882,7 @@ func TestSanitizationComplexCombinations(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(name)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename != expected {
 			t.Errorf("The filename does not match the expected file name. Expected (%s), Actual (%s)", expected, filename)
 		}
@@ -912,6 +916,7 @@ func TestSanitizationComplexCombinations(t *testing.T) {
 	}
 	clearCache()
 }
+
 // ============ End of File String Sanitization Tests ============
 
 // ============ Timeout Tests ============
@@ -931,23 +936,24 @@ func TestTimeoutSimple(t *testing.T) {
 	// We finally make the http request which the handler can understand.
 	req := genRequestUrl(badname)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if filename == ("." + goodname) {
 			data = gooddata
 		} else {
 			// Inf loop.
-			for ;filename != filename + "hahaha"; {}
+			for filename != filename+"hahaha" {
+			}
 		}
 		return
 	})
 	c := make(chan bool)
-	go func (chan bool) {
+	go func(chan bool) {
 		handler(resp, req)
 		c <- true
 	}(c)
 	select {
-	case <- c: // This means we did not time out.
-	case <- time.After(time.Duration(secTimeout + 1) * time.Second):
+	case <-c: // This means we did not time out.
+	case <-time.After(time.Duration(secTimeout+1) * time.Second):
 		t.Errorf("The handler took too long to respond!")
 	}
 	validateTimeout(resp, t)
@@ -979,10 +985,10 @@ func TestTimeoutWithResponse(t *testing.T) {
 	gooddata := []byte("I am some really good data that is fun to watch and good to know!")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		time.Sleep(time.Duration(timeout * 2) * time.Second)
+		time.Sleep(time.Duration(timeout*2) * time.Second)
 		data = gooddata
 		return
 	})
@@ -990,7 +996,7 @@ func TestTimeoutWithResponse(t *testing.T) {
 	resp := requestFile(goodname, secTimeout, t)
 	validateTimeout(resp, t)
 	validateCacheSize(0, 0, t)
-	time.Sleep(time.Duration(timeout) * time.Second + time.Millisecond * time.Duration(250))
+	time.Sleep(time.Duration(timeout)*time.Second + time.Millisecond*time.Duration(250))
 	validateCacheSize(1, len(gooddata), t)
 	resp2 := requestFile(goodname, secTimeout, t)
 	validateFileResponse("", "", gooddata, resp2, userlib.SUCCESSCODE, t)
@@ -1020,10 +1026,10 @@ func TestTimeoutValidateSingleResponse(t *testing.T) {
 	var reads uint64 = 0
 	done := make(chan bool)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		time.Sleep(time.Duration(timeout * 2) * time.Second)
+		time.Sleep(time.Duration(timeout*2) * time.Second)
 		data = gooddata
 		done <- true
 		return
@@ -1032,8 +1038,8 @@ func TestTimeoutValidateSingleResponse(t *testing.T) {
 	resp := requestFile(goodname, secTimeout, t)
 	validateTimeout(resp, t)
 	validateCacheSize(0, 0, t)
-	<- done
-	time.Sleep(time.Duration(timeout) * time.Second + time.Millisecond * time.Duration(250))
+	<-done
+	time.Sleep(time.Duration(timeout)*time.Second + time.Millisecond*time.Duration(250))
 	validateTimeout(resp, t)
 	validateCacheSize(1, len(gooddata), t)
 	resp2 := requestFile(goodname, secTimeout, t)
@@ -1066,7 +1072,7 @@ func TestTimeoutNoResponseThenSecondHasResponse(t *testing.T) {
 	var reads uint64 = 0
 	done := make(chan bool)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error){
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		atomic.AddUint64(&reads, 1)
 		if filename == ("." + goodname) {
 			data = gooddata
@@ -1074,9 +1080,10 @@ func TestTimeoutNoResponseThenSecondHasResponse(t *testing.T) {
 			// Inf loop.
 			switch reads {
 			case 1:
-				for ;filename != filename + "hahaha"; {}
+				for filename != filename+"hahaha" {
+				}
 			case 2:
-				time.Sleep(time.Duration(secTimeout + 1) * time.Second)
+				time.Sleep(time.Duration(secTimeout+1) * time.Second)
 				data = baddata
 				done <- true
 			default:
@@ -1092,8 +1099,8 @@ func TestTimeoutNoResponseThenSecondHasResponse(t *testing.T) {
 	validateTimeout(resp, t)
 	validateCacheSize(0, 0, t)
 	select {
-	case <- done:
-	case <- time.After(time.Duration((timeout + 1) * 2) * time.Second):
+	case <-done:
+	case <-time.After(time.Duration((timeout+1)*2) * time.Second):
 		t.Errorf("Failed to get my response!")
 	}
 	time.Sleep(time.Duration(100) * time.Millisecond)
@@ -1114,6 +1121,7 @@ func TestTimeoutNoResponseThenSecondHasResponse(t *testing.T) {
 	}
 	clearCache()
 }
+
 // ============ End of Timeout Tests ============
 
 // ============ Exact Capacity Tests ============
@@ -1128,7 +1136,7 @@ func TestExactCapacitySingle(t *testing.T) {
 	launchCache()
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		data = []byte(fmt.Sprintf("FID:%v", filename[2:]))
@@ -1136,20 +1144,20 @@ func TestExactCapacitySingle(t *testing.T) {
 	})
 	for i := 0; i < numFiles; i++ {
 		fid := fmt.Sprintf("%v", i)
-		resp := requestFile("/" + fid, secTimeout, t)
-		if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+		resp := requestFile("/"+fid, secTimeout, t)
+		if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 			t.FailNow()
 		}
 	}
-	validateCacheSize(numFiles, numFiles * 5, t)
+	validateCacheSize(numFiles, numFiles*5, t)
 	for i := numFiles - 1; i >= 0; i-- {
 		fid := fmt.Sprintf("%v", i)
-		resp := requestFile("/" + fid, secTimeout, t)
-		if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+		resp := requestFile("/"+fid, secTimeout, t)
+		if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 			t.FailNow()
 		}
 	}
-	validateCacheSize(numFiles, numFiles * 5, t)
+	validateCacheSize(numFiles, numFiles*5, t)
 	validateNumberOfReads(uint64(numFiles), reads, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
@@ -1174,7 +1182,7 @@ func TestExactCapacityMany(t *testing.T) {
 	launchCache()
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
 		data = []byte(fmt.Sprintf("FID:%v", filename[2:]))
@@ -1182,54 +1190,54 @@ func TestExactCapacityMany(t *testing.T) {
 	})
 	for i := 0; i < numFiles; i++ {
 		fid := fmt.Sprintf("%v", i)
-		resp := requestFile("/" + fid, secTimeout, t)
-		if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+		resp := requestFile("/"+fid, secTimeout, t)
+		if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 			t.FailNow()
 		}
 	}
-	validateCacheSize(numFiles, numFiles * 5, t)
+	validateCacheSize(numFiles, numFiles*5, t)
 	for i := 0; i < iterations; i++ {
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			for i := numFiles - 1; i >= 0; i-- {
 				fid := fmt.Sprintf("%v", i)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 			}
 		} else {
 			for i := numFiles - 1; i >= 0; i-- {
 				fid := fmt.Sprintf("%v", i)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 
 			}
 		}
-		if i % 5 == 0 {
+		if i%5 == 0 {
 			for i := (numFiles - 1) / 2; i >= 0; i-- {
 				fid := fmt.Sprintf("%v", i)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 
 			}
-			for i := 0; i < numFiles / 2; i++ {
+			for i := 0; i < numFiles/2; i++ {
 				fid := fmt.Sprintf("%v", i)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 
 			}
 		}
-		if validateCacheSize(numFiles, numFiles * 5, t) == true {
+		if validateCacheSize(numFiles, numFiles*5, t) == true {
 			t.FailNow()
 		}
 	}
-	validateCacheSize(numFiles, numFiles * 5, t)
+	validateCacheSize(numFiles, numFiles*5, t)
 	validateNumberOfReads(uint64(numFiles), reads, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
@@ -1241,6 +1249,7 @@ func TestExactCapacityMany(t *testing.T) {
 	}
 	clearCache()
 }
+
 // ============ End of Exact Capacity Tests ============
 
 // ============ Exceed Capacity Eviction Test ============
@@ -1256,7 +1265,7 @@ func TestExceedCapacityNoReadFileEviction(t *testing.T) {
 	launchCache()
 	allowRead := true
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		if !allowRead {
 			t.Errorf("A read occurred which should not have occured!")
@@ -1268,13 +1277,13 @@ func TestExceedCapacityNoReadFileEviction(t *testing.T) {
 		for i := 0; i < numFiles; i++ {
 			fid := fmt.Sprintf("%v", i)
 			allowRead = true
-			resp := requestFile("/" + fid, secTimeout, t)
-			if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+			resp := requestFile("/"+fid, secTimeout, t)
+			if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 				t.FailNow()
 			}
 			allowRead = false
-			resp = requestFile("/" + fid, secTimeout, t)
-			if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+			resp = requestFile("/"+fid, secTimeout, t)
+			if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 				t.FailNow()
 			}
 			if validateCacheNotExceeded(t) == true {
@@ -1284,14 +1293,14 @@ func TestExceedCapacityNoReadFileEviction(t *testing.T) {
 		for i := numFiles - 1; i >= 0; i-- {
 			fid := fmt.Sprintf("%v", i)
 			allowRead = true
-			resp := requestFile("/" + fid, secTimeout, t)
-			if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+			resp := requestFile("/"+fid, secTimeout, t)
+			if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 				t.FailNow()
 			}
 
 			allowRead = false
-			resp = requestFile("/" + fid, secTimeout, t)
-			if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+			resp = requestFile("/"+fid, secTimeout, t)
+			if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 				t.FailNow()
 			}
 			if validateCacheNotExceeded(t) == true {
@@ -1310,6 +1319,7 @@ func TestExceedCapacityNoReadFileEviction(t *testing.T) {
 	}
 	clearCache()
 }
+
 // ============ End of Exceed Capacity Eviction Test ============
 
 // ============ Exceed Capacity Tests ============
@@ -1327,12 +1337,12 @@ func TestExceedCapacityOneLargeFileThenAnotherLargeFile(t *testing.T) {
 	anotherLargeFileData := []byte("1234567890123456789012345")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename == "." + anotherLargeFileName {
+		} else if filename == "."+anotherLargeFileName {
 			data = anotherLargeFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1371,12 +1381,12 @@ func TestExceedCapacityOneLargeFileThenOneByteOverNormal(t *testing.T) {
 	anotherLargeFileData := []byte("12345")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename == "." + anotherLargeFileName {
+		} else if filename == "."+anotherLargeFileName {
 			data = anotherLargeFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1415,12 +1425,12 @@ func TestExceedCapacityOneLargeFileThenOneByteOverWithOneByteFile(t *testing.T) 
 	anotherLargeFileData := []byte("1")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename == "." + anotherLargeFileName {
+		} else if filename == "."+anotherLargeFileName {
 			data = anotherLargeFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1460,14 +1470,14 @@ func TestExceedCapacityOneLargeOneSmallOverByMany(t *testing.T) {
 	anotherLargeFileData := []byte("a very large file")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename == "." + anotherLargeFileName {
+		} else if filename == "."+anotherLargeFileName {
 			data = anotherLargeFileData
-		} else if filename == "." + smallFileName {
+		} else if filename == "."+smallFileName {
 			data = smallFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1479,7 +1489,7 @@ func TestExceedCapacityOneLargeOneSmallOverByMany(t *testing.T) {
 	validateCacheSize(1, len(largeFileData), t)
 	resp2 := requestFile(smallFileName, secTimeout, t)
 	validateFileResponse("", "", smallFileData, resp2, userlib.SUCCESSCODE, t)
-	validateCacheSize(2, len(largeFileData) + len(smallFileData), t)
+	validateCacheSize(2, len(largeFileData)+len(smallFileData), t)
 	resp3 := requestFile(anotherLargeFileName, secTimeout, t)
 	validateFileResponse("", "", anotherLargeFileData, resp3, userlib.SUCCESSCODE, t)
 	validateCacheNotExceeded(t)
@@ -1510,14 +1520,14 @@ func TestExceedCapacityOneLargeOneSmallOverByOne(t *testing.T) {
 	anotherLargeFileData := []byte("123456")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename == "." + anotherLargeFileName {
+		} else if filename == "."+anotherLargeFileName {
 			data = anotherLargeFileData
-		} else if filename == "." + smallFileName {
+		} else if filename == "."+smallFileName {
 			data = smallFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1529,7 +1539,7 @@ func TestExceedCapacityOneLargeOneSmallOverByOne(t *testing.T) {
 	validateCacheSize(1, len(largeFileData), t)
 	resp2 := requestFile(smallFileName, secTimeout, t)
 	validateFileResponse("", "", smallFileData, resp2, userlib.SUCCESSCODE, t)
-	validateCacheSize(2, len(largeFileData) + len(smallFileData), t)
+	validateCacheSize(2, len(largeFileData)+len(smallFileData), t)
 	resp3 := requestFile(anotherLargeFileName, secTimeout, t)
 	validateFileResponse("", "", anotherLargeFileData, resp3, userlib.SUCCESSCODE, t)
 	validateCacheNotExceeded(t)
@@ -1549,7 +1559,7 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByMany(t *testin
 	largeFileData := []byte("I am very many bytes of data!")
 	smallFileData := []byte("IM SMALL")
 	totFiles := 100
-	secCap := len(smallFileData) * totFiles + 5
+	secCap := len(smallFileData)*totFiles + 5
 	secTimeout := 2
 	capacity = secCap
 	timeout = secTimeout
@@ -1559,12 +1569,12 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByMany(t *testin
 	smallFileName := "/smallfile.61c"
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename[:len(smallFileName) + 1] == "." + smallFileName {
+		} else if filename[:len(smallFileName)+1] == "."+smallFileName {
 			data = smallFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1572,14 +1582,14 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByMany(t *testin
 		return
 	})
 	for i := 0; i < totFiles; i++ {
-		resp2 := requestFile(smallFileName + fmt.Sprintf("%v", i), secTimeout, t)
+		resp2 := requestFile(smallFileName+fmt.Sprintf("%v", i), secTimeout, t)
 		validateFileResponse("", "", smallFileData, resp2, userlib.SUCCESSCODE, t)
-		validateCacheSize(i + 1, len(smallFileData) * (i + 1), t)
+		validateCacheSize(i+1, len(smallFileData)*(i+1), t)
 	}
 	resp := requestFile(largeFileName, secTimeout, t)
 	validateFileResponse("", "", largeFileData, resp, userlib.SUCCESSCODE, t)
 	validateCacheNotExceeded(t)
-	validateNumberOfReads(uint64(totFiles + 1), reads, t)
+	validateNumberOfReads(uint64(totFiles+1), reads, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
 		os.Exit(61)
@@ -1595,7 +1605,7 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByOne(t *testing
 	smallFileData := []byte("IM SMALL")
 	largeFileData := []byte("123456")
 	totFiles := 100
-	secCap := len(smallFileData) * totFiles + 5
+	secCap := len(smallFileData)*totFiles + 5
 	secTimeout := 2
 	capacity = secCap
 	timeout = secTimeout
@@ -1605,12 +1615,12 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByOne(t *testing
 	smallFileName := "/smallfile.61c"
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename[:len(smallFileName) + 1] == "." + smallFileName {
+		} else if filename[:len(smallFileName)+1] == "."+smallFileName {
 			data = smallFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1618,14 +1628,14 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByOne(t *testing
 		return
 	})
 	for i := 0; i < totFiles; i++ {
-		resp2 := requestFile(smallFileName + fmt.Sprintf("%v", i), secTimeout, t)
+		resp2 := requestFile(smallFileName+fmt.Sprintf("%v", i), secTimeout, t)
 		validateFileResponse("", "", smallFileData, resp2, userlib.SUCCESSCODE, t)
-		validateCacheSize(i + 1, len(smallFileData) * (i + 1), t)
+		validateCacheSize(i+1, len(smallFileData)*(i+1), t)
 	}
 	resp := requestFile(largeFileName, secTimeout, t)
 	validateFileResponse("", "", largeFileData, resp, userlib.SUCCESSCODE, t)
 	validateCacheNotExceeded(t)
-	validateNumberOfReads(uint64(totFiles + 1), reads, t)
+	validateNumberOfReads(uint64(totFiles+1), reads, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
 		os.Exit(61)
@@ -1640,7 +1650,7 @@ func TestExceedCapacityManySmallToSmallerThanTotSizeThenExceededByOne(t *testing
 func TestExceedCapacityManySmallAndOneBigExact(t *testing.T) {
 	smallFileData := []byte("IM SMALL")
 	totFiles := 100
-	secCap := len(smallFileData) * totFiles + 2
+	secCap := len(smallFileData)*totFiles + 2
 	secTimeout := 2
 	capacity = secCap
 	largeFileData := []byte(strings.Repeat("a", capacity))
@@ -1651,12 +1661,12 @@ func TestExceedCapacityManySmallAndOneBigExact(t *testing.T) {
 	smallFileName := "/smallfile.61c"
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename[:len(smallFileName) + 1] == "." + smallFileName {
+		} else if filename[:len(smallFileName)+1] == "."+smallFileName {
 			data = smallFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1664,14 +1674,14 @@ func TestExceedCapacityManySmallAndOneBigExact(t *testing.T) {
 		return
 	})
 	for i := 0; i < totFiles; i++ {
-		resp2 := requestFile(smallFileName + fmt.Sprintf("%v", i), secTimeout, t)
+		resp2 := requestFile(smallFileName+fmt.Sprintf("%v", i), secTimeout, t)
 		validateFileResponse("", "", smallFileData, resp2, userlib.SUCCESSCODE, t)
-		validateCacheSize(i + 1, len(smallFileData) * (i + 1), t)
+		validateCacheSize(i+1, len(smallFileData)*(i+1), t)
 	}
 	resp := requestFile(largeFileName, secTimeout, t)
 	validateFileResponse("", "", largeFileData, resp, userlib.SUCCESSCODE, t)
 	validateCacheSize(1, len(largeFileData), t)
-	validateNumberOfReads(uint64(totFiles + 1), reads, t)
+	validateNumberOfReads(uint64(totFiles+1), reads, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
 		os.Exit(61)
@@ -1697,12 +1707,12 @@ func TestExceedCapacityInsertFileLargerThanCache(t *testing.T) {
 	anotherLargeFileData := []byte("1sdfgsdfgs")
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + largeFileName {
+		if filename == "."+largeFileName {
 			data = largeFileData
-		} else if filename == "." + anotherLargeFileName {
+		} else if filename == "."+anotherLargeFileName {
 			data = anotherLargeFileData
 		} else {
 			data = []byte("BAD NAME")
@@ -1741,17 +1751,17 @@ func TestExceedCapacityManyDifferentSizedFilesCapacityCheck(t *testing.T) {
 	workingDir = ""
 	launchCache()
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		data = []byte(fmt.Sprintf("FID:%v", filename[2:]))
 		return
 	})
 	for i := 0; i < iterations; i++ {
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			for i := numFiles - 1; i >= 0; i-- {
-				fid := fmt.Sprintf("%v", i * 100)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				fid := fmt.Sprintf("%v", i*100)
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 				if validateCacheNotExceeded(t) == true {
@@ -1760,9 +1770,9 @@ func TestExceedCapacityManyDifferentSizedFilesCapacityCheck(t *testing.T) {
 			}
 		} else {
 			for i := numFiles - 1; i >= 0; i-- {
-				fid := fmt.Sprintf("%v", i * 100)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				fid := fmt.Sprintf("%v", i*100)
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 				if validateCacheNotExceeded(t) == true {
@@ -1770,21 +1780,21 @@ func TestExceedCapacityManyDifferentSizedFilesCapacityCheck(t *testing.T) {
 				}
 			}
 		}
-		if i % 5 == 0 {
+		if i%5 == 0 {
 			for i := (numFiles - 1) / 2; i >= 0; i-- {
-				fid := fmt.Sprintf("%v", i * 100)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				fid := fmt.Sprintf("%v", i*100)
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 				if validateCacheNotExceeded(t) == true {
 					t.FailNow()
 				}
 			}
-			for i := 0; i < numFiles / 2; i++ {
-				fid := fmt.Sprintf("%v", i * 10000000000000)
-				resp := requestFile("/" + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte("FID:" + fid), resp, userlib.SUCCESSCODE, t) == true {
+			for i := 0; i < numFiles/2; i++ {
+				fid := fmt.Sprintf("%v", i*10000000000000)
+				resp := requestFile("/"+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte("FID:"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 				if validateCacheNotExceeded(t) == true {
@@ -1814,6 +1824,7 @@ func TestExceedCapacityManyDifferentSizedFilesCapacityCheck(t *testing.T) {
 	}
 	clearCache()
 }
+
 // ============ End of Exceed Capacity Tests ============
 
 // ============ Multithreading Tests ============
@@ -1833,13 +1844,13 @@ func TestMultithreadingTwoThreadsDifFiles(t *testing.T) {
 
 	var reads uint64 = 0
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		// Increment the read counter
 		atomic.AddUint64(&reads, 1)
-		if filename == "." + file1Name {
+		if filename == "."+file1Name {
 			time.Sleep(time.Duration(10) * time.Millisecond)
 			data = file1Data
-		} else if filename == "." + file2Name {
+		} else if filename == "."+file2Name {
 			data = file2Data
 		} else {
 			data = []byte("Invalid name!")
@@ -1867,8 +1878,8 @@ func TestMultithreadingTwoThreadsDifFiles(t *testing.T) {
 		}()
 		for i := 2; i > 0; i-- {
 			select {
-			case id := <- done:
-				if i == 2 && id == 1{
+			case id := <-done:
+				if i == 2 && id == 1 {
 					count++
 				}
 			}
@@ -1890,7 +1901,7 @@ func TestMultithreadingTwoThreadsDifFiles(t *testing.T) {
 		t.Errorf("Thread 2 should have completed first a majority of the time. Completed first %v times out of %v.", count, iterations)
 	}
 	validateCacheNotExceeded(t)
-	validateNumberOfReads(uint64(iterations * 2), reads, t)
+	validateNumberOfReads(uint64(iterations*2), reads, t)
 	if capacity != secCap {
 		t.Errorf("The max capacity has been changed when it should not have been!")
 		os.Exit(61)
@@ -1905,7 +1916,7 @@ func TestMultithreadingTwoThreadsSameFile(t *testing.T) {
 	// We first need to define a capacity and timeout so our cache has some parameters.
 	iterations := 100
 	fileData := []byte("I am some spicy data for a good thread")
-	secCap := (len(fileData) + 3)* 2 + 5
+	secCap := (len(fileData)+3)*2 + 5
 	secTimeout := 10
 	capacity = secCap
 	timeout = secTimeout
@@ -1914,11 +1925,11 @@ func TestMultithreadingTwoThreadsSameFile(t *testing.T) {
 	fileName := "/threadfile.61c_"
 	readAllowed := true
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		if !readAllowed {
 			t.Errorf("A read occured when the value should have been cached!")
 		}
-		if filename[:len(fileName) + 1] == "." + fileName {
+		if filename[:len(fileName)+1] == "."+fileName {
 			time.Sleep(time.Duration(150) * time.Millisecond)
 			data = []byte(string(fileData) + filename[len(fileName):])
 		} else {
@@ -1930,8 +1941,8 @@ func TestMultithreadingTwoThreadsSameFile(t *testing.T) {
 	f := func(id int) {
 		// Thread 1
 		readAllowed = true
-		resp := requestFile(fileName + fmt.Sprintf("%v", id), secTimeout, t)
-		if validateFileResponse("", "", []byte(string(fileData) + fmt.Sprintf("_%v", id)), resp, userlib.SUCCESSCODE, t) == true {
+		resp := requestFile(fileName+fmt.Sprintf("%v", id), secTimeout, t)
+		if validateFileResponse("", "", []byte(string(fileData)+fmt.Sprintf("_%v", id)), resp, userlib.SUCCESSCODE, t) == true {
 			t.FailNow()
 		}
 		fin <- 1
@@ -1940,17 +1951,17 @@ func TestMultithreadingTwoThreadsSameFile(t *testing.T) {
 	go f(-1)
 	for i := 2; i > 0; i-- {
 		select {
-		case <- fin:
+		case <-fin:
 		}
 	}
-	validateCacheSize(1, len(fileData) + 3, t) // Three extra things: "_-1"
+	validateCacheSize(1, len(fileData)+3, t) // Three extra things: "_-1"
 	for j := 0; j < iterations; j++ {
 		done := make(chan int)
 		f := func(id int) {
 			// Thread 1
 			readAllowed = true
-			resp := requestFile(fileName + fmt.Sprintf("%v", id), secTimeout, t)
-			if validateFileResponse("", "", []byte(string(fileData) + fmt.Sprintf("_%v", id)), resp, userlib.SUCCESSCODE, t) == true {
+			resp := requestFile(fileName+fmt.Sprintf("%v", id), secTimeout, t)
+			if validateFileResponse("", "", []byte(string(fileData)+fmt.Sprintf("_%v", id)), resp, userlib.SUCCESSCODE, t) == true {
 				t.FailNow()
 			}
 			done <- 1
@@ -1959,15 +1970,15 @@ func TestMultithreadingTwoThreadsSameFile(t *testing.T) {
 		go f(j)
 		for i := 2; i > 0; i-- {
 			select {
-			case <- done:
+			case <-done:
 			}
 		}
 		if validateCacheNotExceeded(t) == true {
 			t.FailNow()
 		}
 		readAllowed = false
-		resp := requestFile(fileName + fmt.Sprintf("%v", j), secTimeout, t)
-		if validateFileResponse("", "", []byte(string(fileData) + fmt.Sprintf("_%v", j)), resp, userlib.SUCCESSCODE, t) == true {
+		resp := requestFile(fileName+fmt.Sprintf("%v", j), secTimeout, t)
+		if validateFileResponse("", "", []byte(string(fileData)+fmt.Sprintf("_%v", j)), resp, userlib.SUCCESSCODE, t) == true {
 			t.FailNow()
 		}
 	}
@@ -1988,7 +1999,7 @@ func TestMultithreadingNThreadWithMultipleRequestsSmall(t *testing.T) {
 	fileData := []byte("I am some very spicy data")
 	iterations := 1000
 	numThreads := 10
-	secCap := (len(fileData) + 2) * numThreads + 10
+	secCap := (len(fileData)+2)*numThreads + 10
 	secTimeout := 10
 	capacity = secCap
 	timeout = secTimeout
@@ -1997,9 +2008,9 @@ func TestMultithreadingNThreadWithMultipleRequestsSmall(t *testing.T) {
 	fileBaseName := "/thread.61c_"
 	reads := uint64(0)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		atomic.AddUint64(&reads, 1)
-		if filename[:len(fileBaseName) + 1] == "." + fileBaseName {
+		if filename[:len(fileBaseName)+1] == "."+fileBaseName {
 			time.Sleep(time.Duration(2) * time.Second)
 			data = []byte(string(fileData) + filename[len(fileBaseName):])
 		} else {
@@ -2012,9 +2023,9 @@ func TestMultithreadingNThreadWithMultipleRequestsSmall(t *testing.T) {
 		for i := 0; i < numThreads; i++ {
 			go func(id int) {
 				// Thread i
-				fid := fmt.Sprintf("%v", (id + iterations) % numThreads)
-				resp := requestFile(fileBaseName + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte(string(fileData) + "_" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				fid := fmt.Sprintf("%v", (id+iterations)%numThreads)
+				resp := requestFile(fileBaseName+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte(string(fileData)+"_"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 				if validateCacheNotExceeded(t) == true {
@@ -2025,7 +2036,7 @@ func TestMultithreadingNThreadWithMultipleRequestsSmall(t *testing.T) {
 		}
 		for i := numThreads; i > 0; i-- {
 			select {
-			case <- done:
+			case <-done:
 			}
 		}
 		if validateCacheNotExceeded(t) == true {
@@ -2050,7 +2061,7 @@ func TestMultithreadingNThreadWithMultipleRequestsLarge(t *testing.T) {
 	fileData := []byte("I am some very spicy data")
 	iterations := 1000
 	numThreads := 1000
-	secCap := (len(fileData) + 4) * numThreads + 10
+	secCap := (len(fileData)+4)*numThreads + 10
 	secTimeout := 10
 	capacity = secCap
 	timeout = secTimeout
@@ -2059,9 +2070,9 @@ func TestMultithreadingNThreadWithMultipleRequestsLarge(t *testing.T) {
 	fileBaseName := "/thread.61c_"
 	reads := uint64(0)
 	// We set the userlib FileRead function to this custom 'read'.
-	userlib.ReplaceReadFile(func(workingDir, filename string)(data []byte, err error) {
+	userlib.ReplaceReadFile(func(workingDir, filename string) (data []byte, err error) {
 		atomic.AddUint64(&reads, 1)
-		if filename[:len(fileBaseName) + 1] == "." + fileBaseName {
+		if filename[:len(fileBaseName)+1] == "."+fileBaseName {
 			time.Sleep(time.Duration(2) * time.Second)
 			data = []byte(string(fileData) + filename[len(fileBaseName):])
 		} else {
@@ -2074,9 +2085,9 @@ func TestMultithreadingNThreadWithMultipleRequestsLarge(t *testing.T) {
 		for i := 0; i < numThreads; i++ {
 			go func(id int) {
 				// Thread i
-				fid := fmt.Sprintf("%v", (id + iterations) % numThreads)
-				resp := requestFile(fileBaseName + fid, secTimeout, t)
-				if validateFileResponse("", "", []byte(string(fileData) + "_" + fid), resp, userlib.SUCCESSCODE, t) == true {
+				fid := fmt.Sprintf("%v", (id+iterations)%numThreads)
+				resp := requestFile(fileBaseName+fid, secTimeout, t)
+				if validateFileResponse("", "", []byte(string(fileData)+"_"+fid), resp, userlib.SUCCESSCODE, t) == true {
 					t.FailNow()
 				}
 				if validateCacheNotExceeded(t) == true {
@@ -2087,7 +2098,7 @@ func TestMultithreadingNThreadWithMultipleRequestsLarge(t *testing.T) {
 		}
 		for i := numThreads; i > 0; i-- {
 			select {
-			case <- done:
+			case <-done:
 			}
 		}
 		if validateCacheNotExceeded(t) == true {
@@ -2106,5 +2117,5 @@ func TestMultithreadingNThreadWithMultipleRequestsLarge(t *testing.T) {
 	}
 	clearCache()
 }
-// ============ End of Multithreading Tests ============
 
+// ============ End of Multithreading Tests ============
