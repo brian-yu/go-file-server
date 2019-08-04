@@ -1,4 +1,3 @@
-# sp19-proj5-starter
-The starter code for a caching filesystem in Golang.
+# Go file server
 
-Add a description of what you did here!
+A concurrent file server written in Go that caches recently served content.
